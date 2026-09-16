@@ -354,6 +354,7 @@ jQuery.noConflict()(function ($) {
       kirimJawaban();
     }
 
+/*
     var elem = document.getElementById("wrap_soal");
     var btnelem = document.getElementById("trigger_soal");
 
@@ -372,6 +373,71 @@ jQuery.noConflict()(function ($) {
         console.log('fullscreen');
       }
     });
+*/
+
+var elem = document.getElementById("wrap_soal");
+var btnelem = document.getElementById("trigger_soal");
+
+btnelem.addEventListener("click", function () {
+
+    // Tampilkan area ujian
+    $("#wrap_soal").show();
+
+    // Fullscreen API modern
+    if (elem.requestFullscreen) {
+
+        elem.requestFullscreen().catch(function (err) {
+            console.error("Gagal masuk fullscreen:", err);
+
+            // Ujian tetap bisa digunakan walaupun fullscreen gagal
+            $("#wrap_soal").show();
+        });
+
+    } else if (elem.webkitRequestFullscreen) {
+
+        // Fallback Safari/WebKit lama
+        elem.webkitRequestFullscreen();
+
+    } else {
+
+        console.warn("Browser tidak mendukung Fullscreen API.");
+
+        // Jangan membuat halaman terkunci
+        $("#wrap_soal").show();
+    }
+});
+
+function handleFullscreenChange() {
+
+    var fullscreenElement =
+        document.fullscreenElement ||
+        document.webkitFullscreenElement;
+
+    if (fullscreenElement) {
+
+        console.log("Mode fullscreen aktif");
+
+        // Jangan sembunyikan elemen fullscreen
+        $("#wrap_soal").show();
+
+    } else {
+
+        console.log("Keluar dari mode fullscreen");
+
+        // Tetap tampilkan ujian agar halaman tidak freeze
+        $("#wrap_soal").show();
+    }
+}
+
+document.addEventListener(
+    "fullscreenchange",
+    handleFullscreenChange
+);
+
+document.addEventListener(
+    "webkitfullscreenchange",
+    handleFullscreenChange
+);
 
     function kirimJawaban(){
       if (!confirm('Yakin jawaban akan dikirim?')) return false;
