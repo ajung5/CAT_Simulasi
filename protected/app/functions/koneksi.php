@@ -1,14 +1,16 @@
 <?php
-	$hostdb = 'localhost';
-    $userdb = 'root';
-    $passdb = '';
-    $namedb = 'ujian';
+    $hostdb = config('database.connections.mysql.host');
+    $userdb = config('database.connections.mysql.username');
+    $passdb = config('database.connections.mysql.password');
+    $namedb = config('database.connections.mysql.database');
 
     $conn = new mysqli($hostdb, $userdb, $passdb, $namedb);
-	if ($conn->connect_error) {
-	    die("Connection failed: " . $conn->connect_error);
-	}
-	$conn->set_charset("utf8");
+
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+
+    $conn->set_charset("utf8");
 
     $bulan["01"] = "Januari";
 	$bulan["02"] = "Februari";
