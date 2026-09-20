@@ -1,54 +1,91 @@
 # Architecture
 
-## Overview
+## Local Development Architecture
 
 ```text
 Browser
    │
-   ├── localhost:8080
-   │        ▼
-   │   PHP 7.1 + Apache
-   │   Laravel 5.1
-   │        │
-   │        ▼
-   │      db:3306
-   │      MySQL 5.7
+   │ http://127.0.0.1:8000
+   ▼
+PHP 7.1.33 built-in server
+Document root: CAT_Simulasi/
    │
-   └── localhost:8081
-            ▼
-        phpMyAdmin
-            │
-            ▼
-          MySQL
+   ▼
+/index.php
+   │
+   ▼
+/protected/bootstrap
+   │
+   ▼
+Laravel 5.1.45 LTS
+   │
+   │ PDO MySQL
+   ▼
+127.0.0.1:3306
+MySQL local (Homebrew)
+   │
+   ▼
+Database: ujian
 ```
-
-## Services
-
-### `web`
-Menjalankan Apache, PHP 7.1, Laravel 5.1, `mod_rewrite`, `pdo_mysql`, `mysqli`, dan `mbstring`.
-
-### `db`
-Menjalankan MySQL 5.7 dan database `ujian`.
-
-### `phpmyadmin`
-Interface administrasi database untuk development.
 
 ## Application Layout
 
-Entry point:
-
 ```text
-/index.php
+CAT_Simulasi/
+├── index.php
+├── .htaccess
+├── assets/
+├── css/
+├── img/
+├── js/
+└── protected/
+    ├── artisan
+    ├── composer.json
+    ├── app/
+    ├── bootstrap/
+    ├── config/
+    ├── database/
+    ├── storage/
+    └── vendor/
 ```
 
-Laravel application:
+`index.php` root memuat:
 
 ```text
-/protected
+protected/bootstrap/autoload.php
+protected/bootstrap/app.php
 ```
 
-Root Apache tetap mengarah ke root project karena struktur aplikasi berbeda dengan layout Laravel modern.
+Karena itu root repository adalah document root aplikasi.
 
-## Legacy Components
+## Kenapa `artisan serve` Tidak Digunakan
 
-Sebagian kode masih menggunakan `mysqli` langsung dan legacy Excel Reader. Upgrade PHP/framework harus dilakukan bertahap.
+Project ini tidak menggunakan struktur `project/public/index.php`. Laravel 5.1 `artisan serve` dapat gagal dengan:
+
+```text
+chdir(): No such file or directory
+```
+
+Gunakan:
+
+```bash
+php -S 127.0.0.1:8000
+```
+
+atau dari `protected/`:
+
+```bash
+php -S 127.0.0.1:8000 -t ..
+```
+
+## Database Layer
+
+```text
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=ujian
+```
+
+## Docker
+
+`compose.yml` dan `dockerfile` tetap ada untuk compatibility testing. Native stack adalah workflow utama untuk Mac karena lebih ringan.

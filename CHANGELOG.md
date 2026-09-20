@@ -1,28 +1,25 @@
 # Changelog
 
-Semua perubahan penting pada project dapat dicatat pada file ini.
-
-Format mengikuti konsep [Keep a Changelog](https://keepachangelog.com/).
-
 ## [Unreleased]
 
 ### Added
 
-- Docker-based local development environment.
-- MySQL 5.7 service.
-- phpMyAdmin service.
-- Project documentation.
+- Native macOS local-development documentation.
+- PHP 7.1.33 session-based PATH workflow.
+- Composer 2.2 LTS workflow.
+- Database `ujian` import/backup/restore documentation.
+- Troubleshooting Composer, `artisan serve`, dan MySQL authentication.
+- Dokumentasi arsitektur custom dengan `index.php` pada repository root.
 
 ### Changed
 
-- Local database connection dapat menggunakan Docker service `db`.
-- Legacy Excel Reader disesuaikan untuk kompatibilitas PHP 7.1.
+- Native PHP + MySQL menjadi workflow utama local development ringan.
+- Docker menjadi opsi compatibility testing.
+- Local server dijalankan dengan PHP built-in server dari repository root.
+- Database connection menggunakan `127.0.0.1:3306`.
+- Security guidance untuk `.env` dan credential diperkuat.
 
-### Fixed
+### Known Issues
 
-- Compatibility issue pada legacy PHP constructor.
-- Local development database connectivity.
-
-## Historical Versions
-
-Versi aplikasi sebelum dokumentasi repository belum dicatat secara formal.
+- PHP 7.1 PDO/mysqlnd dapat gagal terhadap MySQL modern dengan `caching_sha2_password` (SQLSTATE 2054).
+- PHP built-in server tidak memproses `.htaccess` seperti Apache.

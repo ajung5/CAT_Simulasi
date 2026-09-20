@@ -1,60 +1,71 @@
 # Development Guide
 
-## Start Environment
+Workflow utama development CAT Simulasi di macOS menggunakan PHP dan MySQL native agar ringan dan tidak membutuhkan Docker Desktop.
+
+## Start Session Development
 
 ```bash
-docker compose up -d
-docker compose ps
+cd /path/to/CAT_Simulasi
+
+export PATH="$(brew --prefix shivammathur/php/php@7.1)/bin:$(brew --prefix shivammathur/php/php@7.1)/sbin:$PATH"
+
+php -v
+brew services start mysql
+php -S 127.0.0.1:8000
 ```
 
-Project directory di-mount ke container, sehingga perubahan PHP, Blade, CSS, dan JavaScript umumnya langsung terlihat tanpa rebuild.
+Akses:
 
-## Kapan Rebuild?
+```text
+http://127.0.0.1:8000
+```
 
-Rebuild diperlukan jika mengubah:
-
-- Dockerfile
-- PHP extension
-- base image
-- konfigurasi build
+Jika berada di `protected/`:
 
 ```bash
-docker compose build --no-cache web
-docker compose up -d
+php -S 127.0.0.1:8000 -t ..
 ```
+
+Jangan gunakan `php artisan serve` pada layout repository ini.
 
 ## Artisan
 
 ```bash
-docker compose exec web php /var/www/html/protected/artisan
+cd protected
+php artisan --version
+php artisan config:clear
+php artisan cache:clear
+php artisan migrate:status
 ```
 
-Contoh:
+## Composer
 
 ```bash
-docker compose exec web php /var/www/html/protected/artisan config:clear
+cd protected
+php composer22.phar install
 ```
 
-## PHP Syntax Check
+Pastikan `php -v` menunjukkan PHP 7.1.33 sebelum Composer dijalankan karena Composer scripts memanggil `php artisan`.
+
+Hindari `composer update` kecuali upgrade dependency memang disengaja dan sudah diuji.
+
+## Stop Local Server
+
+Tekan `Ctrl+C`.
+
+MySQL dapat dihentikan:
 
 ```bash
-docker compose exec web php -l /var/www/html/protected/app/Http/Controllers/GuruController.php
+brew services stop mysql
 ```
 
-## Git
+## Regression Test Minimum
 
-```bash
-git status
-git diff
-```
-
-Commit prefix yang disarankan:
-
-```text
-feat:
-fix:
-docs:
-refactor:
-chore:
-security:
-```
+1. Authentication
+2. Session
+3. Bank soal
+4. Import soal
+5. Pelaksanaan ujian
+6. Penilaian
+7. Export/report
+8. Koneksi database
