@@ -140,14 +140,18 @@ class SiswaController extends Controller
   {
   if (Auth::user()->status == "S" or Auth::user()->status == "C") {
       $idsoal = $id;
-      $soals = Detailsoal::where('id_soal', $id)->orderBy(DB::raw('RAND()'))->get();
+      $soals = Detailsoal::where('id_soal', $id)
+              ->orderBy(DB::raw('RAND()'))
+              ->get();
+      $firstSoalId = $soals->count() ? $soals->first()->id : 0;
       $user = User::where('id', Auth::user()->id)->first();
       $school = School::first();
 
       $detailsoal = Detailsoal::join('soals', 'detailsoals.id_soal', '=', 'soals.id')
-                      ->select('soals.paket', 'soals.waktu', 'detailsoals.*')
-                      ->where('detailsoals.id_soal', $id)
-                      ->orderBy(DB::raw('RAND()'))->first();
+                    ->select('soals.paket', 'soals.waktu', 'detailsoals.*')
+                    ->where('detailsoals.id_soal', $id)
+                    ->where('detailsoals.id', $firstSoalId)
+                    ->first();
       $jumlah_soal = Detailsoal::where('id_soal', $id)->get();
       $soal = Soal::where('id', $id)->first();
       $countexamtime = Countexamtime::where('id_soal', $id)->where('id_user', Auth::user()->id)->first();

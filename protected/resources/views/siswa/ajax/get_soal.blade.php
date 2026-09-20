@@ -64,7 +64,7 @@
 
     <script>
       $(document).ready(function(){
-        $("input[name=pilih{{ $detailsoal->id }}]").click(function(){
+        $("input[name=pilih{{ $detailsoal->id }}]").change(function(){
           var pilihan = $("input[name=pilih{{ $detailsoal->id }}]:checked").val();
           var id_soal = $("#id_soal{{ $detailsoal->id }}").val();
           var no_soal_id = $("#no_soal_id{{ $detailsoal->id }}").val();
@@ -107,6 +107,15 @@
                 $("#wrap_pil_e").addClass('benar');
               }
               $("#get-soal{{ $detailsoal->id }}").removeClass('page gradient').addClass('page active');
+              $("#current_question_id").val("{{ $detailsoal->id }}");
+                setTimeout(function(){
+                  var nextQuestion = $("#get-soal{{ $detailsoal->id }}")
+                    .nextAll("a.page")
+                    .first();
+                  if(nextQuestion.length){
+                    nextQuestion.trigger("click");
+                  }
+                }, 350);
             }
           })
         });

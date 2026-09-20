@@ -47,6 +47,11 @@
   input[type=radio]{
     margin-top: 5px;
   }
+
+  .page.current {
+    outline: 3px solid #003284;
+    outline-offset: 2px;
+}
 </style>
 @extends('layouts/siswa_baru')
 @section('title', 'Detail Soal')
@@ -154,7 +159,12 @@
       </div>
     </div>
   </div>
-  <input type="hidden" name="id_soal{{ $detailsoal->id }}" id="id_soal{{ $detailsoal->id }}" value="{{ $detailsoal->id_soal }}">
+  <input type="hidden" name="id_soal{{ $detailsoal->id }}"
+          id="id_soal{{ $detailsoal->id }}"
+          value="{{ $detailsoal->id_soal }}">
+  <input type="hidden"
+       id="current_question_id"
+       value="{{ $detailsoal->id }}">
   <div class="container wrap_ujian" style="display: none;">
     <div style="height: 15px"></div>
     <div class="row">
@@ -210,7 +220,7 @@
 
             <script>
               $(document).ready(function(){
-                $("input[name=pilih{{ $detailsoal->id }}]").click(function(){
+                $("input[name=pilih{{ $detailsoal->id }}]").change(function(){
                   var pilihan = $("input[name=pilih{{ $detailsoal->id }}]:checked").val();
                   var id_soal = $("#id_soal{{ $detailsoal->id }}").val();
                   var no_soal_id = $("#no_soal_id{{ $detailsoal->id }}").val();
@@ -253,6 +263,15 @@
                         $("#wrap_pil_e").addClass('benar');
                       }
                       $("#get-soal{{ $detailsoal->id }}").removeClass('page gradient').addClass('page active');
+                      $("#current_question_id").val("{{ $detailsoal->id }}");
+                        setTimeout(function(){
+                          var nextQuestion = $("#get-soal{{ $detailsoal->id }}")
+                            .nextAll("a.page")
+                            .first();
+                          if(nextQuestion.length){
+                            nextQuestion.trigger("click");
+                          }
+                        }, 350);
                     }
                   })
                 });
@@ -289,20 +308,34 @@
               @if($soals->count())
               @foreach($soals as $data)
                 <input type="hidden" id="id{{ $data->id }}" value="{{ $data->id }}">
-                <a href="#" style="text-decoration: none;" class="page gradient" id="get-soal{{ $data->id }}">{{ $no++ }}</a>
+                <a href="#"
+                  style="text-decoration: none;"
+                  class="page gradient"
+                  id="get-soal{{ $data->id }}"
+                  data-question-id="{{ $data->id }}">
+                  {{ $no++ }}
+                </a>
                 <script>
                   jQuery.noConflict()(function ($) {
                     $(document).ready(function(){
-                      $("#get-soal{{ $data->id }}").click(function(){
-                        var id = $("#id{{ $data->id }}").val();
-                        $.ajax({
-                          type: "POST",
-                          url: "{{ url('/get-soal/'.$data->id) }}",
-                          data: 'id='+id,
-                          success: function(data){
-                            $("#wrap-soal").hide().html(data).fadeIn(350);
-                          }
-                        })
+                      $("#get-soal{{ $data->id }}").click(function(e){
+                          e.preventDefault();
+                          var id = $("#id{{ $data->id }}").val();
+                          $.ajax({
+                              type: "POST",
+                              url: "{{ url('/get-soal/'.$data->id) }}",
+                              data: 'id='+id,
+                              success: function(data){
+                                  $("#current_question_id").val(id);
+                                  $(".page").removeClass("current");
+                                  $("#get-soal" + id).addClass("current");
+                                  $("#wrap-soal")
+                                      .hide()
+                                      .html(data)
+                                      .fadeIn(350);
+                                      updateQuestionNavigationButtons();
+                              }
+                          });
                       });
                     });
                   });
@@ -311,6 +344,23 @@
               @endif
             </ul>
             <hr>
+            <div style="margin-bottom: 10px;">
+              <button
+                  type="button"
+                  id="soal-sebelumnya"
+                  class="btn btn-default">
+                  <i class="fa fa-chevron-left"></i>
+                  Sebelumnya
+              </button>
+              <button
+                  type="button"
+                  id="soal-berikutnya"
+                  class="btn btn-default pull-right">
+                  Berikutnya
+                  <i class="fa fa-chevron-right"></i>
+              </button>
+              <div class="clearfix"></div>
+            </div>
             <input type="button" id="kirim" value="Selesai" class="btn btn-primary" style="float: right">
             <br style="clear: both;">
             <hr>
@@ -327,8 +377,24 @@ jQuery.noConflict()(function ($) {
       'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
     }
   });
-  
-
+  function updateQuestionNavigationButtons(){
+    var currentId = $("#current_question_id").val();
+    var currentQuestion = $("#get-soal" + currentId);
+    var previousQuestion = currentQuestion
+        .prevAll("a.page")
+        .first();
+    var nextQuestion = currentQuestion
+        .nextAll("a.page")
+        .first();
+    $("#soal-sebelumnya").prop(
+        "disabled",
+        previousQuestion.length === 0
+    );
+    $("#soal-berikutnya").prop(
+        "disabled",
+        nextQuestion.length === 0
+    );
+  }
 
   $(document).ready(function(){
     $("#siap-ujian").click(function(){
@@ -349,6 +415,31 @@ jQuery.noConflict()(function ($) {
       }, 5000);
 
     });
+
+    $("#get-soal{{ $detailsoal->id }}").addClass("current");
+
+    $("#soal-sebelumnya").click(function(){
+      var currentId = $("#current_question_id").val();
+      var previousQuestion = $("#get-soal" + currentId)
+          .prevAll("a.page")
+          .first();
+      if(previousQuestion.length){
+          previousQuestion.trigger("click");
+      }
+    });
+    $("#soal-berikutnya").click(function(){
+      var currentId = $("#current_question_id").val();
+      var nextQuestion = $("#get-soal" + currentId)
+          .nextAll("a.page")
+          .first();
+      if(nextQuestion.length){
+          nextQuestion.trigger("click");
+      }
+    });
+
+    $("#get-soal{{ $detailsoal->id }}").addClass("current");
+    updateQuestionNavigationButtons();
+
     function liftOff() { 
       alert('Waktu ujian telah selesai. Jawaban Anda akan dikirimkan.');
       kirimJawaban();
