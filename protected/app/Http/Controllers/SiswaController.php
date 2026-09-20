@@ -140,14 +140,18 @@ class SiswaController extends Controller
   {
   if (Auth::user()->status == "S" or Auth::user()->status == "C") {
       $idsoal = $id;
-      $soals = Detailsoal::where('id_soal', $id)->orderBy(DB::raw('RAND()'))->get();
+      $soals = Detailsoal::where('id_soal', $id)
+              ->orderBy(DB::raw('RAND()'))
+              ->get();
+      $firstSoalId = $soals->count() ? $soals->first()->id : 0;
       $user = User::where('id', Auth::user()->id)->first();
       $school = School::first();
 
       $detailsoal = Detailsoal::join('soals', 'detailsoals.id_soal', '=', 'soals.id')
-                      ->select('soals.paket', 'soals.waktu', 'detailsoals.*')
-                      ->where('detailsoals.id_soal', $id)
-                      ->orderBy(DB::raw('RAND()'))->first();
+                    ->select('soals.paket', 'soals.waktu', 'detailsoals.*')
+                    ->where('detailsoals.id_soal', $id)
+                    ->where('detailsoals.id', $firstSoalId)
+                    ->first();
       $jumlah_soal = Detailsoal::where('id_soal', $id)->get();
       $soal = Soal::where('id', $id)->first();
       $countexamtime = Countexamtime::where('id_soal', $id)->where('id_user', Auth::user()->id)->first();
@@ -301,11 +305,23 @@ class SiswaController extends Controller
     $cek_jawaban = Jawab::where('id_soal', $id_soal)
                           ->where('id_user', Auth::user()->id)
                           ->get();
+
+    $jumlahJawaban = 0;
+
     foreach ($cek_jawaban as $value) {
       $value->status = 'Y';
       $value->save();
+      $jumlahJawaban++;
     }
-    
+
+    \Log::info('exam.finished', array(
+      'user_id' => Auth::user()->id,
+      'id_soal' => $id_soal,
+      'answered_questions' => $jumlahJawaban,
+      'ip' => Request::ip()
+    ));
+
+    return 'OK';
   }
 
   public function hasil_siswa()
@@ -316,17 +332,17 @@ class SiswaController extends Controller
             ->select(['jawabs.id', 'jawabs.id_user', 'soals.id as id_soal', 'soals.paket', 'soals.deskripsi', 'soals.kkm', 'soals.jenis as jenis_soal', 'jawabs.created_at', 'jawabs.updated_at',
               \DB::raw('sum(jawabs.score) as count')])
             ->where('jawabs.id_user', Auth::user()->id)
-            ->where('status', 'Y')
-            /*->where('soals.jenis', 1)*/
+            ->where('jawabs.status', 'Y')
             ->orderby('jawabs.id', 'desc')
             ->groupby('id_soal')->paginate(10);
     return view('siswa.hasil', compact('user', 'school', 'jawabs'));
   }
+
   public function get_hasil()
   {
     $q = Input::get('q');
     $jawabs = Jawab::join('soals', 'jawabs.id_soal', '=', 'soals.id')
-            ->select(['jawabs.id', 'jawabs.id_user', 'soals.id as id_soal', 'soals.paket', 'soals.deskripsi', 'soals.kkm', 'jawabs.created_at', 'jawabs.updated_at',
+            ->select(['jawabs.id', 'jawabs.id_user', 'soals.id as id_soal', 'soals.paket', 'soals.deskripsi', 'soals.kkm', 'soals.jenis as jenis_soal', 'jawabs.created_at', 'jawabs.updated_at',
               \DB::raw('sum(jawabs.score) as count')])
             ->where('jawabs.id_user', Auth::user()->id)
             ->where('jawabs.status', 'Y')
@@ -335,20 +351,124 @@ class SiswaController extends Controller
             ->groupby('jawabs.id_soal')->paginate(10);
     return view('siswa.ajax.get_hasil', compact('jawabs'));
   }
+
   public function detail_hasil_siswa($id)
   {
-    if (Auth::user()->status == "S" or Auth::user()->status =="C") {
-      $user = User::where('email', Auth::user()->email)->first();
-      $soal = Soal::where('id', '$id')->first();
-      $soals = Soal::where('id', '!=', '$id')->get();
-      $idsoal = $id;
-      
-      $jawabs = Jawab::join('detailsoals', 'jawabs.no_soal_id', '=', 'detailsoals.id')
-                        ->select('detailsoals.soal', 'detailsoals.kunci', 'jawabs.*')
-                        ->where('jawabs.id_soal', $id)->get();
-      return view('siswa.detail', compact('user', 'idsoal', 'soal', 'soals', 'jawabs'));
+    if (Auth::user()->status == "S" or Auth::user()->status == "C") {
+      $userId = Auth::user()->id;
+      $user = User::where('id', $userId)->first();
+      $soal = Soal::where('id', $id)->first();
+
+      if (!$soal) {
+        abort(404);
+      }
+
+      /*
+       * Review hanya boleh dibuka setelah submission selesai.
+       * Jika masih ada jawaban berstatus N, berarti ujian/latihan sedang dikerjakan
+       * atau sedang dalam proses retake, sehingga kunci tidak boleh ditampilkan.
+       */
+      $adaJawabanSelesai = Jawab::where('id_soal', $id)
+                              ->where('id_user', $userId)
+                              ->where('status', 'Y')
+                              ->exists();
+
+      $adaJawabanDraft = Jawab::where('id_soal', $id)
+                              ->where('id_user', $userId)
+                              ->where('status', 'N')
+                              ->exists();
+
+      if (!$adaJawabanSelesai || $adaJawabanDraft) {
+        \Log::warning('exam.review.denied', array(
+          'user_id' => $userId,
+          'id_soal' => $id,
+          'has_finished_answer' => $adaJawabanSelesai,
+          'has_draft_answer' => $adaJawabanDraft,
+          'ip' => Request::ip()
+        ));
+
+        return redirect('hasil-siswa')
+              ->with('error', 'Review jawaban hanya tersedia setelah ujian selesai.');
+      }
+
+      /*
+       * Master query dimulai dari detailsoals, lalu LEFT JOIN ke jawabs.
+       * Dengan cara ini soal yang tidak dijawab tetap muncul pada halaman review.
+       * Filter user/id_soal/status diletakkan pada JOIN agar tidak mengubah LEFT JOIN
+       * menjadi INNER JOIN secara tidak sengaja.
+       */
+      $jawabs = Detailsoal::leftJoin('jawabs', function($join) use ($id, $userId) {
+                        $join->on('detailsoals.id', '=', 'jawabs.no_soal_id')
+                             ->where('jawabs.id_soal', '=', $id)
+                             ->where('jawabs.id_user', '=', $userId)
+                             ->where('jawabs.status', '=', 'Y');
+                      })
+                      ->select(
+                        'detailsoals.id as detail_id',
+                        'detailsoals.soal',
+                        'detailsoals.pila',
+                        'detailsoals.pilb',
+                        'detailsoals.pilc',
+                        'detailsoals.pild',
+                        'detailsoals.pile',
+                        'detailsoals.kunci',
+                        'detailsoals.score as max_score',
+                        'jawabs.pilihan as jawaban',
+                        'jawabs.score as score_diperoleh',
+                        'jawabs.created_at as dijawab_pada',
+                        'jawabs.updated_at as diubah_pada'
+                      )
+                      ->where('detailsoals.id_soal', $id)
+                      ->orderBy('detailsoals.id', 'asc')
+                      ->get();
+
+      $jumlahSoal = $jawabs->count();
+      $benar = 0;
+      $salah = 0;
+      $tidakDijawab = 0;
+      $nilai = 0;
+
+      foreach ($jawabs as $jawab) {
+        $pilihan = strtoupper(trim((string) $jawab->jawaban));
+        $kunci = strtoupper(trim((string) $jawab->kunci));
+        $nilai += (float) $jawab->score_diperoleh;
+
+        if ($pilihan === '') {
+          $tidakDijawab++;
+        } elseif ($pilihan === $kunci) {
+          $benar++;
+        } else {
+          $salah++;
+        }
+      }
+
+      $lulus = ((float) $nilai >= (float) $soal->kkm);
+      $jenis = ((int) $soal->jenis === 1) ? 'Ujian' : 'Latihan';
+
+      \Log::info('exam.review.opened', array(
+        'user_id' => $userId,
+        'id_soal' => $id,
+        'score' => $nilai,
+        'correct' => $benar,
+        'wrong' => $salah,
+        'unanswered' => $tidakDijawab,
+        'ip' => Request::ip()
+      ));
+
+      return view('siswa.detail', compact(
+        'user',
+        'soal',
+        'jawabs',
+        'jumlahSoal',
+        'benar',
+        'salah',
+        'tidakDijawab',
+        'nilai',
+        'lulus',
+        'jenis'
+      ));
     }else{
-        return redirect('guru');
+      return redirect('guru');
     }
   }
 
