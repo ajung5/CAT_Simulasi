@@ -447,7 +447,7 @@ document.addEventListener(
         type: 'POST',
         data: 'id_soal='+id_soal,
         success: function(data){
-          window.location.href = "{{ url('/siswa') }}";
+          window.location.href = "{{ url('/hasil-siswa') }}";
           // console.log(data);
         }
       })

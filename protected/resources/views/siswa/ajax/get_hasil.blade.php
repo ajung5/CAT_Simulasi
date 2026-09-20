@@ -5,6 +5,7 @@
       <th class="center">#</th>
       <th>Paket Soal</th>
       <th>Deskripsi Soal</th>
+      <th class="center">Nilai</th>
       <th class="center">KKM</th>
       <th class="center">Status</th>
       <th>Tanggal</th>
@@ -15,7 +16,7 @@
     @if($jawabs->count())
     @foreach($jawabs as $jawab)
     <?php
-      if ($jawab->kkm >= $jawab->count) {
+      if ((int)$jawab->kkm <= (int)$jawab->count) {
         $status = "<span style='color:#009900; font-size: 18px; font-weight: bold; text-align:center'>Lulus</<span>";
       }else{
         $status = "<span style='color:#e60000; font-size: 18px; font-weight: bold; text-align: center;'>Gagal</<span>";
@@ -32,6 +33,7 @@
       <td class="center">{{ $no++ }}</td>
       <td>{{ $jawab->paket }}</td>
       <td>{{ $jawab->deskripsi }}</td>
+      <td class="center"><strong>{{ $jawab->count }}</strong></td>
       <td class="center">{{ $jawab->kkm }}</td>
       <td class="center">{!! $status !!}</td>
       <td>{{ $tanggal }}</td>
