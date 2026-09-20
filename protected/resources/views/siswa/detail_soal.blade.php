@@ -27,7 +27,7 @@
   }
 
   .page.active {
-    border: none;
+    border: solid 1px #4a4a4a;
     background: #616161;
     box-shadow: inset 0px 0px 8px rgba(0,0,0, .5), 0px 1px 0px rgba(255,255,255, .8);
     color: #f0f0f0;
@@ -39,19 +39,26 @@
     background: -moz-linear-gradient(0% 0% 270deg,#f8f8f8, #e9e9e9);
   }
 
-  .benar{
+  .page.current {
+    outline: 3px solid #003284;
+    outline-offset: 2px;
+  }
+
+  .benar {
     padding: 15px;
     background: #045ff2;
     color: #fff;
   }
-  input[type=radio]{
+
+  input[type=radio] {
     margin-top: 5px;
   }
 
-  .page.current {
-    outline: 3px solid #003284;
-    outline-offset: 2px;
-}
+  #question-navigation {
+    margin-top: 15px;
+    padding: 12px 0;
+    border-top: solid thin #e3e9f2;
+  }
 </style>
 @extends('layouts/siswa_baru')
 @section('title', 'Detail Soal')
@@ -130,7 +137,6 @@
     </div>
   </div>
 </div>
-
 @endsection
 
 <script src="{{ url('/assets/assets/vendor/jquery.min.js') }}"></script>
@@ -138,13 +144,13 @@
 <script src="{{ url('/assets/assets/libs/countdown/js/jquery.countdown.js') }}"></script>
 <script src="{{ url('/assets/assets/vendor/sweetalert.min.js') }}"></script>
 
-
 <div id="wrap_soal" style="display: none; background: #f2f7ff; height: 100%; width: 100%; padding: 0; margin: 0; overflow-y: scroll;">
   <div class="container" style="margin: 50px auto 0 auto; padding: 15px; background: #fff; text-align: center" id="wrap-siap-ujian">
     <p>Dengan mengklik tombol "Siap Ujian", waktu ujian akan mulai berjalan. Sistem akan mengirim jawaban Anda saat waktu telah selesai walaupun Anda tidak mengklik Kirim Jawaban.</p>
     <input type="button" id="siap-ujian" value="Siap Ujian" class="btn btn-success">
     <a type="button" href="{{ url('/soal-siswa/'.$soal->id) }}" class="btn btn-danger">Batal</a>
   </div>
+
   <div class="container-fluid hidden-sm hidden-xs wrap_ujian" style="display: none;">
     <div class="row">
       <div class="col-md-12" style="background: #003284; padding:10px;">
@@ -152,134 +158,87 @@
           <div class="col-md-6" style="color: #fff;">
             Hai {{ $user->nama }}, Selamat mengerjakan Soal {{ $soal->paket }}
           </div>
-          <div class="col-md-6">
-            
-          </div>
+          <div class="col-md-6"></div>
         </div>
       </div>
     </div>
   </div>
-  <input type="hidden" name="id_soal{{ $detailsoal->id }}"
-          id="id_soal{{ $detailsoal->id }}"
-          value="{{ $detailsoal->id_soal }}">
-  <input type="hidden"
-       id="current_question_id"
-       value="{{ $detailsoal->id }}">
+
+  <input type="hidden" name="id_soal{{ $detailsoal->id }}" id="id_soal{{ $detailsoal->id }}" value="{{ $detailsoal->id_soal }}">
+  <input type="hidden" id="current_question_id" value="{{ $detailsoal->id }}">
+
   <div class="container wrap_ujian" style="display: none;">
     <div style="height: 15px"></div>
     <div class="row">
-      <div class="col-md-8 col-sm-12" style="border:solid thin #e3e9f2; background: #fff; padding:10px" id="wrap-soal">
-        <table class="table table-condensed" style="padding:0; margin: 0">
-          <tbody>
-            <tr>
-              <input type="hidden" name="id_soaljawab" id="id_soaljawab" value="{{ $detailsoal->id_soal }}">
-              <input type="hidden" name="no_soal_id{{ $detailsoal->id }}" id="no_soal_id{{ $detailsoal->id }}" value="{{ $detailsoal->id }}">
 
-              <!-- <td style="width: 15px">1</td> -->
-              <td colspan="2">
-                <?php if($detailsoal->audio != ""){ $audio = $detailsoal->audio; ?>
-                  <div style="margin: 0 0 20px 0; padding: 15px; border: solid thin #a8a8a8;">
-                    <span style="color: #828282">Audio for Listening</span><hr style="margin: 8px 0 15px 0">
-                    <div class="clearfix"></div>
-                    <p>
-                      <audio controls>
-                      <source src="{{ url('/assets/audios/'.$audio) }}" type="audio/mpeg">
-                      Your browser does not support the audio element.
-                    </audio>
-                    </p>
-                  </div>
-                <?php } ?>
-                {!! $detailsoal->soal !!}
-              </td>
-            </tr>
-            <tr id="wrap_pil_a">
-              <!-- <td>&nbsp;</td> -->
-              <td style="width: 10px"><input type="radio" name="pilih{{ $detailsoal->id }}" value="A" data-toggle='tooltip' title="Klik untuk menjawab."></td>
-              <td>{!! $detailsoal->pila !!}</td>
-            </tr>
-            <tr id="wrap_pil_b">
-              <!-- <td>&nbsp;</td> -->
-              <td><input type="radio" name="pilih{{ $detailsoal->id }}" value="B" data-toggle='tooltip' title="Klik untuk menjawab."></td>
-              <td>{!! $detailsoal->pilb !!} </td>
-            </tr>
-            <tr id="wrap_pil_c">
-              <!-- <td>&nbsp;</td> -->
-              <td><input type="radio" name="pilih{{ $detailsoal->id }}" value="C" data-toggle='tooltip' title="Klik untuk menjawab."></td>
-              <td>{!! $detailsoal->pilc !!} </td>
-            </tr>
-            <tr id="wrap_pil_d">
-              <!-- <td>&nbsp;</td> -->
-              <td><input type="radio" name="pilih{{ $detailsoal->id }}" value="D" data-toggle='tooltip' title="Klik untuk menjawab."></td>
-              <td>{!! $detailsoal->pild !!} </td>
-            </tr>
-            <tr id="wrap_pil_e">
-              <!-- <td>&nbsp;</td> -->
-              <td><input type="radio" name="pilih{{ $detailsoal->id }}" value="E" data-toggle='tooltip' title="Klik untuk menjawab."></td>
-              <td>{!! $detailsoal->pile !!} </td>
-            </tr>
+      <!-- AREA SOAL -->
+      <div class="col-md-8 col-sm-12" style="padding: 0 10px 0 0;">
+        <div style="border:solid thin #e3e9f2; background: #fff; padding:10px" id="wrap-soal">
+          <table class="table table-condensed" style="padding:0; margin: 0">
+            <tbody>
+              <tr>
+                <input type="hidden" name="id_soaljawab" id="id_soaljawab" value="{{ $detailsoal->id_soal }}">
+                <input type="hidden" class="question-id-soal" value="{{ $detailsoal->id_soal }}">
+                <input type="hidden" class="question-detail-id" value="{{ $detailsoal->id }}">
+                <input type="hidden" name="no_soal_id{{ $detailsoal->id }}" id="no_soal_id{{ $detailsoal->id }}" value="{{ $detailsoal->id }}">
 
-            <script>
-              $(document).ready(function(){
-                $("input[name=pilih{{ $detailsoal->id }}]").change(function(){
-                  var pilihan = $("input[name=pilih{{ $detailsoal->id }}]:checked").val();
-                  var id_soal = $("#id_soal{{ $detailsoal->id }}").val();
-                  var no_soal_id = $("#no_soal_id{{ $detailsoal->id }}").val();
-                  var id_user = $("#id_user{{ $detailsoal->id }}").val();
-                  var datastring = "pilihan="+pilihan+"&id_soal="+id_soal+"&no_soal_id="+no_soal_id+"&id_user="+id_user;
-                  $.ajax({
-                    type: "POST",
-                    url: "{!! url('simpanjawabankliksiswa') !!}",
-                    data: datastring,
-                    success: function(data){
-                      if (data == 'A') {
-                        $("#wrap_pil_b").removeClass('benar');
-                        $("#wrap_pil_c").removeClass('benar');
-                        $("#wrap_pil_d").removeClass('benar');
-                        $("#wrap_pil_e").removeClass('benar');
-                        $("#wrap_pil_a").addClass('benar');
-                      }else if(data == 'B'){
-                        $("#wrap_pil_a").removeClass('benar');
-                        $("#wrap_pil_c").removeClass('benar');
-                        $("#wrap_pil_d").removeClass('benar');
-                        $("#wrap_pil_e").removeClass('benar');
-                        $("#wrap_pil_b").addClass('benar');
-                      }else if(data == 'C'){
-                        $("#wrap_pil_b").removeClass('benar');
-                        $("#wrap_pil_a").removeClass('benar');
-                        $("#wrap_pil_d").removeClass('benar');
-                        $("#wrap_pil_e").removeClass('benar');
-                        $("#wrap_pil_c").addClass('benar');
-                      }else if(data == 'D'){
-                        $("#wrap_pil_b").removeClass('benar');
-                        $("#wrap_pil_c").removeClass('benar');
-                        $("#wrap_pil_a").removeClass('benar');
-                        $("#wrap_pil_e").removeClass('benar');
-                        $("#wrap_pil_d").addClass('benar');
-                      }else if(data == 'E'){
-                        $("#wrap_pil_b").removeClass('benar');
-                        $("#wrap_pil_c").removeClass('benar');
-                        $("#wrap_pil_d").removeClass('benar');
-                        $("#wrap_pil_a").removeClass('benar');
-                        $("#wrap_pil_e").addClass('benar');
-                      }
-                      $("#get-soal{{ $detailsoal->id }}").removeClass('page gradient').addClass('page active');
-                      $("#current_question_id").val("{{ $detailsoal->id }}");
-                        setTimeout(function(){
-                          var nextQuestion = $("#get-soal{{ $detailsoal->id }}")
-                            .nextAll("a.page")
-                            .first();
-                          if(nextQuestion.length){
-                            nextQuestion.trigger("click");
-                          }
-                        }, 350);
-                    }
-                  })
-                });
-              });
-            </script>
-          </tbody>
-        </table>
+                <td colspan="2">
+                  <?php if($detailsoal->audio != ""){ $audio = $detailsoal->audio; ?>
+                    <div style="margin: 0 0 20px 0; padding: 15px; border: solid thin #a8a8a8;">
+                      <span style="color: #828282">Audio for Listening</span>
+                      <hr style="margin: 8px 0 15px 0">
+                      <div class="clearfix"></div>
+                      <p>
+                        <audio controls>
+                          <source src="{{ url('/assets/audios/'.$audio) }}" type="audio/mpeg">
+                          Your browser does not support the audio element.
+                        </audio>
+                      </p>
+                    </div>
+                  <?php } ?>
+                  {!! $detailsoal->soal !!}
+                </td>
+              </tr>
+
+              <tr id="wrap_pil_a">
+                <td style="width: 10px"><input type="radio" name="pilih{{ $detailsoal->id }}" value="A" data-toggle='tooltip' title="Klik untuk menjawab."></td>
+                <td>{!! $detailsoal->pila !!}</td>
+              </tr>
+              <tr id="wrap_pil_b">
+                <td><input type="radio" name="pilih{{ $detailsoal->id }}" value="B" data-toggle='tooltip' title="Klik untuk menjawab."></td>
+                <td>{!! $detailsoal->pilb !!}</td>
+              </tr>
+              <tr id="wrap_pil_c">
+                <td><input type="radio" name="pilih{{ $detailsoal->id }}" value="C" data-toggle='tooltip' title="Klik untuk menjawab."></td>
+                <td>{!! $detailsoal->pilc !!}</td>
+              </tr>
+              <tr id="wrap_pil_d">
+                <td><input type="radio" name="pilih{{ $detailsoal->id }}" value="D" data-toggle='tooltip' title="Klik untuk menjawab."></td>
+                <td>{!! $detailsoal->pild !!}</td>
+              </tr>
+              <tr id="wrap_pil_e">
+                <td><input type="radio" name="pilih{{ $detailsoal->id }}" value="E" data-toggle='tooltip' title="Klik untuk menjawab."></td>
+                <td>{!! $detailsoal->pile !!}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- NAVIGASI BERADA DI BAWAH SOAL -->
+        <div id="question-navigation">
+          <button type="button" id="soal-sebelumnya" class="btn btn-default">
+            <i class="fa fa-chevron-left"></i> Sebelumnya
+          </button>
+
+          <button type="button" id="soal-berikutnya" class="btn btn-default pull-right">
+            Berikutnya <i class="fa fa-chevron-right"></i>
+          </button>
+
+          <div class="clearfix"></div>
+        </div>
       </div>
+
+      <!-- PANEL KANAN -->
       <div class="row col-md-4 col-sm-12" style="padding: 0 10px">
         <div class="card">
           <div class="card-header bg-white">
@@ -295,72 +254,27 @@
           <div class="card-header bg-white">
             <div class="media">
               <div class="media-body">
-                <h4 class="card-title">
-                  Nomor Soal
-                </h4>
+                <h4 class="card-title">Nomor Soal</h4>
               </div>
             </div>
           </div>
+
           <div style="padding: 0 15px">
             <ul class="pagination">
               <input type="hidden" name="_token" value="{{{ csrf_token() }}}" />
               <?php $no = 1; ?>
               @if($soals->count())
-              @foreach($soals as $data)
-                <input type="hidden" id="id{{ $data->id }}" value="{{ $data->id }}">
-                <a href="#"
-                  style="text-decoration: none;"
-                  class="page gradient"
-                  id="get-soal{{ $data->id }}"
-                  data-question-id="{{ $data->id }}">
-                  {{ $no++ }}
-                </a>
-                <script>
-                  jQuery.noConflict()(function ($) {
-                    $(document).ready(function(){
-                      $("#get-soal{{ $data->id }}").click(function(e){
-                          e.preventDefault();
-                          var id = $("#id{{ $data->id }}").val();
-                          $.ajax({
-                              type: "POST",
-                              url: "{{ url('/get-soal/'.$data->id) }}",
-                              data: 'id='+id,
-                              success: function(data){
-                                  $("#current_question_id").val(id);
-                                  $(".page").removeClass("current");
-                                  $("#get-soal" + id).addClass("current");
-                                  $("#wrap-soal")
-                                      .hide()
-                                      .html(data)
-                                      .fadeIn(350);
-                                      updateQuestionNavigationButtons();
-                              }
-                          });
-                      });
-                    });
-                  });
-                </script>
-              @endforeach
+                @foreach($soals as $data)
+                  <a href="#"
+                     style="text-decoration: none;"
+                     class="page gradient question-number"
+                     id="get-soal{{ $data->id }}"
+                     data-question-id="{{ $data->id }}">{{ $no++ }}</a>
+                @endforeach
               @endif
             </ul>
+
             <hr>
-            <div style="margin-bottom: 10px;">
-              <button
-                  type="button"
-                  id="soal-sebelumnya"
-                  class="btn btn-default">
-                  <i class="fa fa-chevron-left"></i>
-                  Sebelumnya
-              </button>
-              <button
-                  type="button"
-                  id="soal-berikutnya"
-                  class="btn btn-default pull-right">
-                  Berikutnya
-                  <i class="fa fa-chevron-right"></i>
-              </button>
-              <div class="clearfix"></div>
-            </div>
             <input type="button" id="kirim" value="Selesai" class="btn btn-primary" style="float: right">
             <br style="clear: both;">
             <hr>
@@ -370,6 +284,7 @@
     </div>
   </div>
 </div>
+
 <script>
 jQuery.noConflict()(function ($) {
   $.ajaxSetup({
@@ -377,176 +292,263 @@ jQuery.noConflict()(function ($) {
       'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
     }
   });
-  function updateQuestionNavigationButtons(){
-    var currentId = $("#current_question_id").val();
-    var currentQuestion = $("#get-soal" + currentId);
-    var previousQuestion = currentQuestion
-        .prevAll("a.page")
-        .first();
-    var nextQuestion = currentQuestion
-        .nextAll("a.page")
-        .first();
-    $("#soal-sebelumnya").prop(
-        "disabled",
-        previousQuestion.length === 0
-    );
+
+  var questionIds = [
+    @foreach($soals as $data)
+      {{ $data->id }},
+    @endforeach
+  ];
+
+  var currentQuestionId = parseInt("{{ $detailsoal->id }}", 10);
+  var isSavingAnswer = false;
+  var isLoadingQuestion = false;
+
+  function getCurrentQuestionIndex() {
+    return questionIds.indexOf(parseInt(currentQuestionId, 10));
+  }
+
+  function updateQuestionNavigation() {
+    var index = getCurrentQuestionIndex();
+
+    $("#current_question_id").val(currentQuestionId);
+
+    $(".question-number").removeClass("current");
+    $("#get-soal" + currentQuestionId).addClass("current");
+
+    $("#soal-sebelumnya").prop("disabled", index <= 0 || isLoadingQuestion || isSavingAnswer);
     $("#soal-berikutnya").prop(
-        "disabled",
-        nextQuestion.length === 0
+      "disabled",
+      index < 0 || index >= questionIds.length - 1 || isLoadingQuestion || isSavingAnswer
     );
   }
 
-  $(document).ready(function(){
-    $("#siap-ujian").click(function(){
+  function loadQuestion(questionId) {
+    questionId = parseInt(questionId, 10);
+
+    if (isSavingAnswer || isLoadingQuestion || questionIds.indexOf(questionId) === -1) {
+      return;
+    }
+
+    if (questionId === parseInt(currentQuestionId, 10)) {
+      updateQuestionNavigation();
+      return;
+    }
+
+    isLoadingQuestion = true;
+    updateQuestionNavigation();
+
+    $.ajax({
+      type: "POST",
+      url: "{{ url('/get-soal') }}/" + questionId,
+      data: {
+        id: questionId
+      },
+      success: function(data) {
+        currentQuestionId = questionId;
+
+        $("#wrap-soal")
+          .stop(true, true)
+          .hide()
+          .html(data)
+          .fadeIn(200);
+
+        isLoadingQuestion = false;
+        updateQuestionNavigation();
+      },
+      error: function() {
+        isLoadingQuestion = false;
+        updateQuestionNavigation();
+        alert("Soal gagal dimuat. Silakan coba kembali.");
+      }
+    });
+  }
+
+  function goPreviousQuestion() {
+    var index = getCurrentQuestionIndex();
+
+    if (index > 0) {
+      loadQuestion(questionIds[index - 1]);
+    }
+  }
+
+  function goNextQuestion() {
+    var index = getCurrentQuestionIndex();
+
+    if (index >= 0 && index < questionIds.length - 1) {
+      loadQuestion(questionIds[index + 1]);
+    }
+  }
+
+  function kirimJawaban() {
+    if (!confirm('Yakin jawaban akan dikirim?')) {
+      return false;
+    }
+
+    var id_soal = $("#id_soal{{ $detailsoal->id }}").val();
+
+    $.ajax({
+      url: "{{ url('/kirimjawaban') }}",
+      type: 'POST',
+      data: 'id_soal=' + id_soal,
+      success: function() {
+        window.location.href = "{{ url('/hasil-siswa') }}";
+      },
+      error: function() {
+        alert("Jawaban gagal dikirim. Silakan coba kembali.");
+      }
+    });
+  }
+
+  $(document).ready(function() {
+    updateQuestionNavigation();
+
+    $("#siap-ujian").click(function() {
       $("#wrap-siap-ujian").hide();
       $(".wrap_ujian").fadeIn(250);
-      $('#defaultCountdown').countdown({until: '+{{ $jam }}h +{{ $menit }}m +0s', format: 'HMS', onExpiry: liftOff});
-      // update waktu ujian untuk siswa
-      setInterval(function(){
+
+      $('#defaultCountdown').countdown({
+        until: '+{{ $jam }}h +{{ $menit }}m +0s',
+        format: 'HMS',
+        onExpiry: liftOff
+      });
+
+      // Update sisa waktu ujian setiap 5 detik.
+      setInterval(function() {
         var id_soal = $("#id_soal{{ $detailsoal->id }}").val();
+
         $.ajax({
           url: "{{ url('/countexamtime') }}",
           type: 'POST',
-          data: 'id_soal='+id_soal,
-          success: function(data){
+          data: 'id_soal=' + id_soal,
+          success: function(data) {
             console.log(data);
           }
         });
       }, 5000);
-
     });
 
-    $("#get-soal{{ $detailsoal->id }}").addClass("current");
-
-    $("#soal-sebelumnya").click(function(){
-      var currentId = $("#current_question_id").val();
-      var previousQuestion = $("#get-soal" + currentId)
-          .prevAll("a.page")
-          .first();
-      if(previousQuestion.length){
-          previousQuestion.trigger("click");
-      }
-    });
-    $("#soal-berikutnya").click(function(){
-      var currentId = $("#current_question_id").val();
-      var nextQuestion = $("#get-soal" + currentId)
-          .nextAll("a.page")
-          .first();
-      if(nextQuestion.length){
-          nextQuestion.trigger("click");
-      }
-    });
-
-    $("#get-soal{{ $detailsoal->id }}").addClass("current");
-    updateQuestionNavigationButtons();
-
-    function liftOff() { 
+    function liftOff() {
       alert('Waktu ujian telah selesai. Jawaban Anda akan dikirimkan.');
       kirimJawaban();
     }
 
-/*
-    var elem = document.getElementById("wrap_soal");
-    var btnelem = document.getElementById("trigger_soal");
+    // Navigasi manual: nomor soal.
+    $(document).on("click", ".question-number", function(e) {
+      e.preventDefault();
 
-    btnelem.onclick = function() {
-    $("#wrap_soal").show();
-      req = elem.requestFullScreen || elem.webkitRequestFullScreen || elem.mozRequestFullScreen;
-      req.call(elem);
-    }
-   
-    $(document).on('webkitfullscreenchange mozfullscreenchange fullscreenchange', function(e){
-      if (!window.screenTop && !window.screenY) {
-        $("#wrap_soal").show();
-        console.log('not fullscreen');
-      } else {
-        $("#wrap_soal").hide();
-        console.log('fullscreen');
-      }
+      var questionId = parseInt($(this).attr("data-question-id"), 10);
+      loadQuestion(questionId);
     });
-*/
 
-var elem = document.getElementById("wrap_soal");
-var btnelem = document.getElementById("trigger_soal");
+    // Navigasi manual: tombol sebelumnya.
+    $("#soal-sebelumnya").click(function() {
+      goPreviousQuestion();
+    });
 
-btnelem.addEventListener("click", function () {
+    // Navigasi manual: tombol berikutnya.
+    $("#soal-berikutnya").click(function() {
+      goNextQuestion();
+    });
 
-    // Tampilkan area ujian
-    $("#wrap_soal").show();
+    // Penyimpanan jawaban terpusat untuk soal awal maupun soal yang dimuat via AJAX.
+    $(document).on("change", "#wrap-soal input[type=radio]", function() {
+      if (isSavingAnswer || isLoadingQuestion) {
+        return;
+      }
 
-    // Fullscreen API modern
-    if (elem.requestFullscreen) {
+      var radio = $(this);
+      var questionContainer = $("#wrap-soal");
+      var pilihan = radio.val();
+      var id_soal = questionContainer.find(".question-id-soal").first().val();
+      var no_soal_id = questionContainer.find(".question-detail-id").first().val();
 
-        elem.requestFullscreen().catch(function (err) {
-            console.error("Gagal masuk fullscreen:", err);
+      if (!pilihan || !id_soal || !no_soal_id) {
+        alert("Data soal tidak lengkap. Silakan muat ulang halaman ujian.");
+        return;
+      }
 
-            // Ujian tetap bisa digunakan walaupun fullscreen gagal
-            $("#wrap_soal").show();
-        });
+      isSavingAnswer = true;
+      questionContainer.find("input[type=radio]").prop("disabled", true);
+      updateQuestionNavigation();
 
-    } else if (elem.webkitRequestFullscreen) {
-
-        // Fallback Safari/WebKit lama
-        elem.webkitRequestFullscreen();
-
-    } else {
-
-        console.warn("Browser tidak mendukung Fullscreen API.");
-
-        // Jangan membuat halaman terkunci
-        $("#wrap_soal").show();
-    }
-});
-
-function handleFullscreenChange() {
-
-    var fullscreenElement =
-        document.fullscreenElement ||
-        document.webkitFullscreenElement;
-
-    if (fullscreenElement) {
-
-        console.log("Mode fullscreen aktif");
-
-        // Jangan sembunyikan elemen fullscreen
-        $("#wrap_soal").show();
-
-    } else {
-
-        console.log("Keluar dari mode fullscreen");
-
-        // Tetap tampilkan ujian agar halaman tidak freeze
-        $("#wrap_soal").show();
-    }
-}
-
-document.addEventListener(
-    "fullscreenchange",
-    handleFullscreenChange
-);
-
-document.addEventListener(
-    "webkitfullscreenchange",
-    handleFullscreenChange
-);
-
-    function kirimJawaban(){
-      if (!confirm('Yakin jawaban akan dikirim?')) return false;
-      var id_soal = $("#id_soal{{ $detailsoal->id }}").val();
       $.ajax({
-        url: "{{ url('/kirimjawaban') }}",
-        type: 'POST',
-        data: 'id_soal='+id_soal,
-        success: function(data){
-          window.location.href = "{{ url('/hasil-siswa') }}";
-          // console.log(data);
-        }
-      })
-    }
+        type: "POST",
+        url: "{!! url('simpanjawabankliksiswa') !!}",
+        data: {
+          pilihan: pilihan,
+          id_soal: id_soal,
+          no_soal_id: no_soal_id
+        },
+        success: function(data) {
+          questionContainer.find("tr[id^='wrap_pil_']").removeClass("benar");
+          radio.closest("tr").addClass("benar");
 
-    $("#kirim").click(function(){
+          // Pertahankan class .page dan hanya hilangkan gradient.
+          $("#get-soal" + no_soal_id)
+            .removeClass("gradient")
+            .addClass("active");
+
+          isSavingAnswer = false;
+          updateQuestionNavigation();
+
+          // Otomatis ke soal berikutnya hanya setelah save berhasil.
+          // Pada soal terakhir, sistem tetap diam dan tidak auto-submit.
+          var index = getCurrentQuestionIndex();
+          if (index >= 0 && index < questionIds.length - 1) {
+            setTimeout(function() {
+              goNextQuestion();
+            }, 300);
+          } else {
+            questionContainer.find("input[type=radio]").prop("disabled", false);
+          }
+        },
+        error: function() {
+          isSavingAnswer = false;
+          questionContainer.find("input[type=radio]").prop("disabled", false);
+          updateQuestionNavigation();
+          alert("Jawaban gagal disimpan. Silakan pilih kembali.");
+        }
+      });
+    });
+
+    $("#kirim").click(function() {
       kirimJawaban();
     });
   });
+
+  // Fullscreen API.
+  var elem = document.getElementById("wrap_soal");
+  var btnelem = document.getElementById("trigger_soal");
+
+  btnelem.addEventListener("click", function() {
+    $("#wrap_soal").show();
+
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(function(err) {
+        console.error("Gagal masuk fullscreen:", err);
+        $("#wrap_soal").show();
+      });
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    } else {
+      console.warn("Browser tidak mendukung Fullscreen API.");
+      $("#wrap_soal").show();
+    }
+  });
+
+  function handleFullscreenChange() {
+    var fullscreenElement = document.fullscreenElement || document.webkitFullscreenElement;
+
+    if (fullscreenElement) {
+      console.log("Mode fullscreen aktif");
+      $("#wrap_soal").show();
+    } else {
+      console.log("Keluar dari mode fullscreen");
+      $("#wrap_soal").show();
+    }
+  }
+
+  document.addEventListener("fullscreenchange", handleFullscreenChange);
+  document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
 });
 </script>
