@@ -357,7 +357,12 @@ jQuery.noConflict()(function ($) {
       },
       error: function() {
         isLoadingQuestion = false;
+        
+        $("#wrap-soal input[type=radio]")
+        .prop("disabled", false);
+
         updateQuestionNavigation();
+
         alert("Soal gagal dimuat. Silakan coba kembali.");
       }
     });
